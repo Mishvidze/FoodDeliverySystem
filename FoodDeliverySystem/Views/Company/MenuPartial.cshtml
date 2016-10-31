@@ -1,0 +1,56 @@
+﻿@model IEnumerable<FoodDeliverySystem.Models.Product>
+
+
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Name)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Cost)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ProductCategory.Name)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CookingTime)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.GeneralProduct.Name)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr id=@String.Concat("table",item.ID.ToString())>
+        <td class="name">
+            @Html.DisplayFor(modelItem => item.Name)
+        </td>
+        <td class="cost">
+            @Html.DisplayFor(modelItem => item.Cost)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ProductCategory.Name)
+        </td>
+        <td class="cookingTime">
+            @Html.DisplayFor(modelItem => item.CookingTime)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.GeneralProduct.Name)
+        </td>
+        <td class="generalProductID" style="display:none">
+            @Html.HiddenFor(modelItem => item.GeneralProduct.ID)
+        </td>
+        <td class="companyID" style="display:none">
+            @Html.HiddenFor(modelItem => item.CompanyID)
+        </td>
+        <td>
+            <button class="btn btn-default addToCart" id=@item.ID.ToString()>კალათაში დამატება</button>
+        </td>
+    </tr>
+}
+
+</table>
+
+
+

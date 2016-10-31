@@ -1,0 +1,247 @@
+﻿@model FoodDeliverySystem.Models.Company
+
+@{
+    ViewBag.Title = "Choose";
+}
+
+<div>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CompanyType.CompanyTypeName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CompanyType.CompanyTypeName)
+
+
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CompanyCostType.CostType)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CompanyCostType.CostType)
+        </dd>
+
+    </dl>
+
+    <div class="flex-container" id="cartDiv">
+    </div>
+    <br />
+    <div class="flex-container-order" id="orderDiv">
+
+    </div>
+
+    @Html.Partial("MenuPartial", Model.Products)
+
+    @Html.Partial("RaitingPartial", Model.Raitings)
+
+
+</div>
+
+@section scripts
+{
+    <script>
+        var Product = function () {
+        };
+
+        Product.prototype.ID;
+
+        Product.prototype.name;
+
+        Product.prototype.cost;
+
+        Product.prototype.quantity;
+
+        Product.prototype.cookingTime;
+
+        Product.prototype.generalProductID;
+
+        Product.prototype.companyID;
+
+        var array = new Array();
+
+        var buttons = document.getElementsByClassName("addToCart");
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].addEventListener('click', func);
+        }
+
+        function func() {
+            var id = this.id;
+            var trID = "table" + id;
+
+            var tdCost = document.querySelector("#" + trID + " .cost");
+            var productCost = (tdCost.innerHTML).trim();
+
+            var tdName = document.querySelector("#" + trID + " .name");
+            var productName = (tdName.innerHTML).trim();
+
+            var tdCookingTime = document.querySelector("#" + trID + " .cookingTime");
+            var productCookingTime = (tdCookingTime.innerHTML).trim();
+
+            var tdGeneralProductID = document.querySelector("#" + trID + " .generalProductID input");
+            var productGeneralProductID = (tdGeneralProductID).value;
+
+
+            var tdCompanyID = document.querySelector("#" + trID + " .companyID input");
+            var productCompanyID = (tdCompanyID).value;
+
+            var productID = this.id;
+
+            var b = false;
+            for (var i = 0; i < array.length; i++) {
+                if (array[i].ID == id) {
+                    array[i].quantity++;
+                    b = true;
+                }
+            }
+
+            if (!b) {
+                var product = new Product();
+                product.ID = id;
+                product.name = productName;
+                product.cost = productCost;
+                product.quantity = 1;
+                product.cookingTime = productCookingTime;
+                product.generalProductID = productGeneralProductID;
+                product.companyID = productCompanyID;
+
+                array.push(product);
+            }
+
+            updateCart();
+        }
+
+        function order() {
+            var OrderedProducts = [];
+
+            for (var i = 0; i < array.length; i++) {
+                productCode = array[i].generalProductID;
+                productQuantity = array[i].quantity;
+                companyID = array[i].companyID;
+                price = array[i].cost;
+                OrderedProducts.push({ "ProductCode": productCode, "ProductQuantity": productQuantity, "CompanyID": companyID, "Price": price });
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("PlaceOrder", "Company")",
+                data: JSON.stringify(OrderedProducts),
+                success: function (data) {
+                    $(document.body).html(data);
+                },
+                contentType: 'application/json'
+            });
+
+            window.location.href = "@Url.Action("Pay", "Company")";
+        }
+
+        function findSimilar() {
+            var SimilarProducts = []
+
+            for (var i = 0; i < array.length; i++) {
+                productCode = array[i].generalProductID;
+                productQuantity = array[i].quantity;
+
+                SimilarProducts.push({ "ProductCode": productCode, "ProductQuantity": productQuantity });
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("FindSimilarCompanies", "Company")",
+                data: JSON.stringify(SimilarProducts),
+                success: function (data) {
+                    $(document.body).html(data);
+                },
+                contentType: 'application/json'
+            });
+        }
+
+
+        function updateCart() {
+            var cart = document.getElementById("cartDiv");
+            cart.innerHTML = "";
+            var totalCost = 0;
+            var maxCookingTime = -1;
+            for (var i = 0; i < array.length; i++) {
+                var newDiv = document.createElement("div");
+                newDiv.className = "flex-item";
+                var node = document.createTextNode(array[i].name + " - " + array[i].cost + "₾, " + "რაოდენობა " + array[i].quantity);
+                newDiv.appendChild(node);
+                cart.appendChild(newDiv);
+
+                totalCost = totalCost + array[i].cost * array[i].quantity;
+                if (maxCookingTime < array[i].cookingTime) {
+                    maxCookingTime = array[i].cookingTime;
+                }
+
+            }
+
+            var orderDiv = document.getElementById("orderDiv");
+            orderDiv.innerHTML = "";
+            var newDiv = document.createElement("div");
+            newDiv.className = "flex-item";
+            var node = document.createTextNode("ღირებულება - " + totalCost + "₾, დამზადების დრო - " + maxCookingTime + " წუთი");
+            newDiv.appendChild(node);
+            orderDiv.appendChild(newDiv);
+
+            var btn = document.createElement("BUTTON");
+            btn.addEventListener('click', order);
+
+            btn.className = "flex-item btn btn-default";
+            var t = document.createTextNode("შეკვეთა");
+            btn.appendChild(t);
+            orderDiv.appendChild(btn);
+
+            var btn = document.createElement("BUTTON");
+            btn.addEventListener('click', findSimilar);
+            btn.className = "flex-item btn btn-default";
+            var t = document.createTextNode("მიპოვე მსგავსი");
+
+            btn.appendChild(t);
+            orderDiv.appendChild(btn);
+
+        }
+
+    </script>
+}
+
+@section styles
+{
+    <style>
+        .flex-container {
+            display: -webkit-flex;
+            display: flex;
+            width: 100%;
+            background-color: lightgrey;
+            padding: 10px;
+            border-radius: 5px;
+            flex-wrap: wrap;
+        }
+
+        .flex-item {
+            margin: 10px;
+            padding: 5px;
+        }
+
+        .flex-container-order {
+            display: -webkit-flex;
+            display: flex;
+            padding: 10px;
+            border-radius: 5px;
+            flex-wrap: wrap;
+        }
+    </style>
+
+}
+

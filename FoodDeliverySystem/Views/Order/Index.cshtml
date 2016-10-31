@@ -1,0 +1,76 @@
+﻿@model IEnumerable<FoodDeliverySystem.Models.Order>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>ჩემი შეკვეთები</h2>
+
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Company.Name)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.TotalCost)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.OrderDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.state)
+        </th>
+
+        <td>
+            @Html.DisplayNameFor(model => model.Raiting.score)
+        </td>
+
+        <td>
+            @Html.DisplayNameFor(model => model.Raiting.Comment)
+        </td>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Company.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TotalCost)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.OrderDate)
+            </td>
+            <td>
+                @switch (item.state)
+                {
+                    case 1: <span>ახალი</span>;
+                    break;
+                    case 2: <span>მიტანილი</span>;
+                    break;
+                    case 3: <span>გაუქმებული</span>;
+                    break;
+                    case 4: <span>ნაჭამი</span>;
+                    break;
+                    default:
+                    break;
+                }
+            </td>
+
+            <td>
+                @Html.DisplayFor(modelItem => item.Raiting.score)
+            </td>
+
+            <td>
+                @Html.DisplayFor(modelItem => item.Raiting.Comment)
+            </td>
+            <td>
+                @Html.ActionLink("შეკვეთის გაუქმება", "CancelOrder", new { id = item.ID }) |
+                @Html.ActionLink("შეკვეთის შეფასება", "CancelOrder", new { id = item.ID })
+            </td>
+        </tr>
+    }
+
+</table>

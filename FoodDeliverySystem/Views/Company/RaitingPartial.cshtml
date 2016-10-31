@@ -1,0 +1,24 @@
+﻿@model IEnumerable<FoodDeliverySystem.Models.Raiting>
+
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.score)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Comment)
+        </th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.score)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Comment)
+        </td>
+    </tr>
+}
+
+</table>
