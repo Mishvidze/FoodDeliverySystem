@@ -12,6 +12,7 @@ namespace FoodDeliverySystem.Controllers
     [Authorize]
     public class ProductController : Controller
     {
+        #region Services
         static ProductService _productService;
         public static ProductService productService
         {
@@ -29,6 +30,9 @@ namespace FoodDeliverySystem.Controllers
                 _productService = value;
             }
         }
+        #endregion
+
+        #region CRUD
         //
         // GET: /Product/
         public ActionResult Index()
@@ -65,8 +69,9 @@ namespace FoodDeliverySystem.Controllers
                 productService.PopulateProduct(productViewModel, product);
                 productService.Add(product);
 
-                RedirectToAction("Index");
+                return RedirectToAction("Index");
             }
+            productService.PopulateSelectLists(productViewModel);
             return View(productViewModel);
         }
 
@@ -95,9 +100,9 @@ namespace FoodDeliverySystem.Controllers
                 productService.PopulateProduct(productViewModel, product);
                 productService.Update(product);
 
-                RedirectToAction("Index");
+                return RedirectToAction("Index");
             }
-
+            productService.PopulateSelectLists(productViewModel);
             return View(productViewModel);
         }
 
@@ -122,5 +127,7 @@ namespace FoodDeliverySystem.Controllers
             }
             return View(product);
         }
+
+        #endregion
     }
 }

@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Web;
+using System.Web.Mvc;
+using System.Data.Entity;
 
 namespace FoodDeliverySystem.Services
 {
@@ -30,6 +32,7 @@ namespace FoodDeliverySystem.Services
                 _productService = value;
             }
         }
+
 
         static CompanyCostTypeService _companyCostTypeService;
         public static CompanyCostTypeService CompanyCostTypeService
@@ -130,6 +133,87 @@ namespace FoodDeliverySystem.Services
         }
         #endregion
 
+        #region Custom CRUD
+        public override IEnumerable<Company> GetAll()
+        {
+            using (var ctx = new ApplicationDbContext())
+            {
+
+                return ctx.Companies
+                .Include(a => a.CompanyCostType)
+                .Include(b => b.CompanyType)
+                .Include(j => j.Raitings)
+                .Include(
+                        d => d.Products
+                            .Select(
+                                e => e.GeneralProduct
+                             )
+                        ).ToList();
+
+            }
+
+        }
+
+        public override Company FindByID(int id)
+        {
+            Company company = base.FindByID(id);
+
+            using (var ctx = new ApplicationDbContext())
+            {
+                Company cm = ctx.Companies
+                    .Include(a => a.CompanyCostType)
+                    .Include(b => b.CompanyType)
+                    .Include(j => j.Raitings)
+                    .Include(
+                            d => d.Products
+                                .Select(
+                                    e => e.ProductCategory
+                                 )
+                            )
+
+                    .Single(c => c.ID == id);
+
+                foreach (var pro in cm.Products)
+                {
+                    ctx.Products.Attach(pro);
+                    ctx.Entry(pro).Reference(p => p.GeneralProduct).Load();
+                }
+
+                return cm;
+
+                //ctx.Companies.Attach(company);
+                //ctx.Entry(company).Reference(p => p.CompanyCostType).Load();
+                //ctx.Entry(company).Reference(p => p.CompanyType).Load();
+
+                //ctx.Entry(company)
+                //    .Collection(c => c.Products)
+                //    //.Query()
+                //    //.Include("ProductCategory")
+                //    //.Include("GeneralProduct")
+                //    .Load();
+
+                //ctx.Entry(company).Collection(p => p.Raitings).Load();
+                //ctx.Set<T>().Attach(item);
+
+                //ctx.Entry(item).State = EntityState.Deleted;
+                //return ctx.SaveChanges();
+
+                //return company
+                //    .Include(c => c.CompanyType)
+                //    .Include(c => c.CompanyCostType)
+                //    .ToList();
+
+                //context.Entry(post).Reference(p => p.Blog).Load(); 
+
+
+            }
+
+
+            //return company;
+        }
+        #endregion
+
+        #region Code for single element creation
         static CompanyService instance;
         [MethodImpl(MethodImplOptions.Synchronized)]
         public static CompanyService GetInstance()
@@ -140,13 +224,15 @@ namespace FoodDeliverySystem.Services
             }
             return instance;
         }
+        #endregion
+
         #region Custom Functions
 
         public IEnumerable<SimilarCompany> PopulateSimilarCompanies(List<SimilarProduct> SimilarProducts)
         {
 
             List<SimilarCompany> similarCompanies =
-                container
+                this.GetAll()
                 .Where(
                     company =>
                         SimilarProducts.All
@@ -199,7 +285,7 @@ namespace FoodDeliverySystem.Services
 
         public IEnumerable<CompanyViewModel> GetAllCompanyViewModels()
         {
-            return container.Select(a => PopulateCompanyViewModel(a));
+            return this.GetAll().Select(a => PopulateCompanyViewModel(a));
         }
 
         public CompanyViewModel PopulateCompanyViewModel(Company company)
@@ -209,18 +295,130 @@ namespace FoodDeliverySystem.Services
             companyViewModel.Name = company.Name;
             companyViewModel.Logo = company.Logo;
 
-            double sum = 0;
-            foreach (var a in company.Raitings)
+            // TODO: this 'if' is temporary
+            using (var ctx = new ApplicationDbContext())
             {
-                sum += a.score;
+                //context.Entry(blog).Collection(p => p.Posts).Load(); 
+                ctx.Set<Company>().Attach(company);
+                ctx.Entry(company).Collection(c => c.Raitings).Load();
+                if (company.Raitings != null)
+                {
+                    double sum = 0;
+                    foreach (var a in company.Raitings)
+                    {
+                        sum += a.score;
+                    }
+
+                    companyViewModel.Votes = company.Raitings.Count;
+                    companyViewModel.AvarageRating = sum / (double)companyViewModel.Votes;
+                }
+
             }
-
-            companyViewModel.Votes = company.Raitings.Count;
-            companyViewModel.AvarageRating = sum / (double)companyViewModel.Votes;
-
             return companyViewModel;
         }
         #endregion
 
+        #region Functions for dropdowns
+
+        public void PopulateCompany(CompanyViewModelDD companyViewModelDD, Company company)
+        {
+            company.ID = companyViewModelDD.ID;
+            company.CompanyTypeID = companyViewModelDD.CompanyTypeID;
+            company.CompanyCostTypeID = companyViewModelDD.CompanyCostTypeID;
+            //
+            company.Name = companyViewModelDD.Name;
+            company.RegistrationDate = companyViewModelDD.RegistrationDate;
+        }
+
+        public void PopulateCompanyViewModelDD(CompanyViewModelDD companyViewModelDD, Company company)
+        {
+            companyViewModelDD.ID = company.ID;
+            companyViewModelDD.CompanyTypeID = company.CompanyTypeID;
+            companyViewModelDD.CompanyCostTypeID = company.CompanyCostTypeID;
+            //
+            companyViewModelDD.Name = company.Name;
+            companyViewModelDD.RegistrationDate = company.RegistrationDate;
+        }
+
+        public void PopulateSelectLists(CompanyViewModelDD companyViewModelDD)
+        {
+            var CompanyTypeSelectList = CompanyTypeService.GetAll().Select(companyType => new SelectListItem
+            {
+                Text = companyType.CompanyTypeName,
+                Value = companyType.ID.ToString(),
+                Selected = companyType.ID == companyViewModelDD.CompanyCostTypeID
+            });
+
+            var CompanyCostTypeSelectList = CompanyCostTypeService.GetAll().Select(companyCostType => new SelectListItem
+            {
+                Text = companyCostType.CostType,
+                Value = companyCostType.ID.ToString(),
+                Selected = companyCostType.ID == companyViewModelDD.CompanyCostTypeID
+            });
+
+            companyViewModelDD.CompanyTypes = CompanyTypeSelectList;
+            companyViewModelDD.CompanyCostTypes = CompanyCostTypeSelectList;
+        }
+
+        #endregion
+
+        internal static void GenerateAllReporst(string userID)
+        {
+            using (var ctx = new ApplicationDbContext())
+            {
+                var uid = userID;
+
+                // პირველი რეპორტი
+                var query1 =
+                            from company in ctx.Companies
+                            join order in ctx.Orders.Where(o => o.UserID == uid)
+                            on company.ID equals order.CompanyID
+                            into g
+                            select new ForReport1
+                            {
+                                CompanyName = company.Name,
+                                TotalSpent = g.Sum(a => a.TotalCost) 
+                            };
+                List<ForReport1> ForReport1s = query1.ToList();
+
+                // მეორე რეპორტი    
+                var query2 =
+                    from gProduct in ctx.GeneralProducts
+                    join order in ctx.OrderedProducts.Where(a => ctx.Orders.Where(o => o.UserID == uid).Select(b => b.ID).Contains(a.OrderID))
+                    on gProduct.ID equals order.GeneralProductID
+                    into g
+                    select new ForReport2
+                    {
+                        GenaralProduct = gProduct.Name,
+                        OrderedCount = g.Count()
+                    };
+
+                List<ForReport2> ForReport2s = query2.OrderByDescending(a => a.OrderedCount).ToList();
+
+                if (ForReport2s.Count > 0)
+                {
+                    ForReport2 report2 = ForReport2s[0];
+                }
+
+                // მესამე რეპორტი
+
+                var query3 =
+                    from company in ctx.Companies
+                    join order in ctx.Orders
+                    on company.ID equals order.CompanyID
+                    into g
+                    select new ForReport3
+                    {
+                        CompanyName = company.Name,
+                        OrderCount = g.Count(),
+                        TotalAmount = g.Sum(a => a.TotalCost)
+                    };
+
+                List<ForReport3> ForReport3s = query3.ToList();
+                int heiuwh = 0;
+
+            }
+
+        }
     }
 }

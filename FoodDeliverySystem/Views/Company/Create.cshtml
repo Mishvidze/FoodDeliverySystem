@@ -1,4 +1,4 @@
-﻿@model FoodDeliverySystem.Models.Company
+﻿@model FoodDeliverySystem.ViewModels.CompanyViewModelDD
 
 @{
     ViewBag.Title = "Create";
@@ -16,30 +16,28 @@
         <hr />
         @Html.ValidationSummary(true)
 
-        <label for="file">Upload Image:</label>
-        <input type="file" name="file" id="file" style="width: 100%;" />
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.CompanyTypeID, "კომპანიის ტიპი", htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownListFor(model => Model.CompanyTypeID, Model.CompanyTypes, htmlAttributes: new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.CompanyTypeID, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.CompanyCostTypeID, "კომპანიის ფასის სეგმენტი", htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownListFor(model => Model.CompanyCostTypeID, Model.CompanyCostTypes, htmlAttributes: new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.CompanyCostTypeID, "", new { @class = "text-danger" })
+            </div>
+        </div>
 
         <div class="form-group">
             @Html.LabelFor(model => model.Name, new { @class = "control-label col-md-2" })
             <div class="col-md-10">
                 @Html.EditorFor(model => model.Name)
                 @Html.ValidationMessageFor(model => model.Name)
-            </div>
-        </div>
-
-        <div class="form-group">
-            @Html.LabelFor(model => model.Cost, new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.Cost)
-                @Html.ValidationMessageFor(model => model.Cost)
-            </div>
-        </div>
-
-        <div class="form-group">
-            @Html.LabelFor(model => model.RegistrationDate, new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.RegistrationDate)
-                @Html.ValidationMessageFor(model => model.RegistrationDate)
             </div>
         </div>
 

@@ -21,8 +21,6 @@
 
         <dd>
             @Html.DisplayFor(model => model.CompanyType.CompanyTypeName)
-
-
         </dd>
 
         <dt>
@@ -130,7 +128,8 @@
                 productQuantity = array[i].quantity;
                 companyID = array[i].companyID;
                 price = array[i].cost;
-                OrderedProducts.push({ "ProductCode": productCode, "ProductQuantity": productQuantity, "CompanyID": companyID, "Price": price });
+                productIDD = array[i].ID;
+                OrderedProducts.push({ "GeneralProductID": productCode, "ProductQuantity": productQuantity, "CompanyID": companyID, "Price": price , "RealProductID" : productIDD});
             }
 
             $.ajax({

@@ -10,6 +10,8 @@ namespace FoodDeliverySystem.ViewModels
     {
             public int ID { get; set; }
             public int CompanyID { get; set; }
+            public int ProductCategoryID { get; set; }
+            public int GeneralProductID { get; set; }
 
             public IEnumerable<SelectListItem> Companies { get; set; }
             public IEnumerable<SelectListItem> ProductCategories { get; set; }
@@ -17,9 +19,7 @@ namespace FoodDeliverySystem.ViewModels
 
             public string Name { get; set; }
             public decimal Cost { get; set; }
-            public int ProductCategoryID { get; set; }
             public int CookingTime { get; set; } // in minutes
-            public int GeneralProductID { get; set; }
 
     }
 }

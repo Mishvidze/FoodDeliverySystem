@@ -20,6 +20,7 @@ namespace FoodDeliverySystem.Models
         public virtual CompanyType CompanyType { get; set; }
         public virtual CompanyCostType CompanyCostType{ get; set; }
         public virtual List<Raiting> Raitings { get; set; }
+        public virtual List<Order> Order { get; set; }
         public virtual List<Product> Products { get; set; }
     }
 }

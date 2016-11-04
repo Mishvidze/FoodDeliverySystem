@@ -39,6 +39,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -107,12 +115,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="EntityFramework">
-      <HintPath>..\packages\EntityFramework.6.0.0\lib\net45\EntityFramework.dll</HintPath>
-    </Reference>
-    <Reference Include="EntityFramework.SqlServer">
-      <HintPath>..\packages\EntityFramework.6.0.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.AspNet.Identity.Core">
       <HintPath>..\packages\Microsoft.AspNet.Identity.Core.1.0.0\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
     </Reference>
@@ -154,6 +156,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdditionalClasses\ForReport1.cs" />
+    <Compile Include="AdditionalClasses\ForReport2.cs" />
+    <Compile Include="AdditionalClasses\ForReport3.cs" />
     <Compile Include="AdditionalClasses\OrderedProduct.cs" />
     <Compile Include="AdditionalClasses\SimilarCompanies.cs" />
     <Compile Include="AdditionalClasses\SimilarProduct.cs" />
@@ -173,6 +178,27 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201611021943597_initial.cs" />
+    <Compile Include="Migrations\201611021943597_initial.Designer.cs">
+      <DependentUpon>201611021943597_initial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201611040452283_added-ordered-products.cs" />
+    <Compile Include="Migrations\201611040452283_added-ordered-products.Designer.cs">
+      <DependentUpon>201611040452283_added-ordered-products.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201611040522522_added-foreign-key-gp.cs" />
+    <Compile Include="Migrations\201611040522522_added-foreign-key-gp.Designer.cs">
+      <DependentUpon>201611040522522_added-foreign-key-gp.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201611041126497_addded-priceHistory.cs" />
+    <Compile Include="Migrations\201611041126497_addded-priceHistory.Designer.cs">
+      <DependentUpon>201611041126497_addded-priceHistory.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201611041129586_addded-priceHistory2.cs" />
+    <Compile Include="Migrations\201611041129586_addded-priceHistory2.Designer.cs">
+      <DependentUpon>201611041129586_addded-priceHistory2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\Card.cs" />
     <Compile Include="Models\CommentType.cs" />
@@ -186,6 +212,7 @@
     <Compile Include="Models\Order.cs" />
     <Compile Include="Models\Product.cs" />
     <Compile Include="Models\ProductCategory.cs" />
+    <Compile Include="Models\ProductPriceHistory.cs" />
     <Compile Include="Models\Raiting.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\AbstractService.cs" />
@@ -195,13 +222,16 @@
     <Compile Include="Services\CompanyService.cs" />
     <Compile Include="Services\CompanyTypeService.cs" />
     <Compile Include="Services\GeneralProductService.cs" />
+    <Compile Include="Services\OrderedProductService.cs" />
     <Compile Include="Services\OrderService.cs" />
     <Compile Include="Services\ProductCategorySevice.cs" />
+    <Compile Include="Services\ProductPriceHistoryService.cs" />
     <Compile Include="Services\ProductService.cs" />
     <Compile Include="Services\RaitingService.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="ViewModels\CompanyChooseViewModel.cs" />
     <Compile Include="ViewModels\CompanyViewModel.cs" />
+    <Compile Include="ViewModels\CompanyViewModelDD.cs" />
     <Compile Include="ViewModels\ProductViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -291,9 +321,12 @@
     <Content Include="Views\Company\Pay.cshtml" />
     <Content Include="Views\Order\Index.cshtml" />
     <Content Include="Views\Order\CancelOrder.cshtml" />
+    <Content Include="Views\Company\Edit.cshtml" />
+    <Content Include="Views\Company\Delete.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Views\Report\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
@@ -301,6 +334,23 @@
     <Content Include="fonts\glyphicons-halflings-regular.eot" />
     <Content Include="packages.config" />
     <None Include="Project_Readme.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201611021943597_initial.resx">
+      <DependentUpon>201611021943597_initial.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201611040452283_added-ordered-products.resx">
+      <DependentUpon>201611040452283_added-ordered-products.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201611040522522_added-foreign-key-gp.resx">
+      <DependentUpon>201611040522522_added-foreign-key-gp.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201611041126497_addded-priceHistory.resx">
+      <DependentUpon>201611041126497_addded-priceHistory.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201611041129586_addded-priceHistory2.resx">
+      <DependentUpon>201611041129586_addded-priceHistory2.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

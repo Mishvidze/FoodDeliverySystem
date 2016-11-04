@@ -8,6 +8,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using System.Net;
+using FoodDeliverySystem.ViewModels;
 
 namespace FoodDeliverySystem.Controllers
 {
@@ -51,6 +52,23 @@ namespace FoodDeliverySystem.Controllers
             }
         }
 
+        static GeneralProductService _GeneralProductService;
+        public static GeneralProductService GeneralProductService
+        {
+            get
+            {
+                if (_GeneralProductService == null)
+                {
+
+                    _GeneralProductService = GeneralProductService.GetInstance();
+                }
+                return _GeneralProductService;
+            }
+            private set
+            {
+                _GeneralProductService = value;
+            }
+        }
 
         static CardService _CardService;
         public static CardService CardService
@@ -69,6 +87,25 @@ namespace FoodDeliverySystem.Controllers
                 _CardService = value;
             }
         }
+
+        static OrderedProductService _OrderedProductService;
+        public static OrderedProductService OrderedProductService
+        {
+            get
+            {
+                if (_OrderedProductService == null)
+                {
+
+                    _OrderedProductService = OrderedProductService.GetInstance();
+                }
+                return _OrderedProductService;
+            }
+            private set
+            {
+                _OrderedProductService = value;
+            }
+        }
+
         #endregion
 
         #region CRUD
@@ -93,64 +130,83 @@ namespace FoodDeliverySystem.Controllers
         // GET: /Company/Create
         public ActionResult Create()
         {
-            return View();
+            var companyViewModelDD = new CompanyViewModelDD();
+            CompanyService.PopulateSelectLists(companyViewModelDD);
+
+            return View(companyViewModelDD);
         }
 
         //
         // POST: /Company/Create
         [HttpPost]
-        public ActionResult Create(Company company, HttpPostedFileBase file)
+        [ValidateAntiForgeryToken]
+        public ActionResult Create(CompanyViewModelDD companyViewModelDD)
         {
+            if (ModelState.IsValid)
+            {
+                var company = new Company();
+                CompanyService.PopulateCompany(companyViewModelDD, company);
+                company.RegistrationDate = DateTime.Now;
+                CompanyService.Add(company);
 
-            return View(company);
+                return RedirectToAction("Index");
+            }
+            CompanyService.PopulateSelectLists(companyViewModelDD);
+            return View(companyViewModelDD);
         }
 
         //
         // GET: /Company/Edit/5
         public ActionResult Edit(int id)
         {
-            return View();
+            CompanyViewModelDD companyViewModelDD = new CompanyViewModelDD();
+            Company company = CompanyService.FindByID(id);
+
+            CompanyService.PopulateCompanyViewModelDD(companyViewModelDD, company);
+            CompanyService.PopulateSelectLists(companyViewModelDD);
+
+            return View(companyViewModelDD);
         }
 
         //
         // POST: /Company/Edit/5
         [HttpPost]
-        public ActionResult Edit(int id, FormCollection collection)
+        [ValidateAntiForgeryToken]
+        public ActionResult Edit(CompanyViewModelDD companyViewModelDD)
         {
-            try
+            if (ModelState.IsValid)
             {
-                // TODO: Add update logic here
+                Company company = new Company();
+                CompanyService.PopulateCompany(companyViewModelDD, company);
+                CompanyService.Update(company);
 
                 return RedirectToAction("Index");
             }
-            catch
-            {
-                return View();
-            }
+            CompanyService.PopulateSelectLists(companyViewModelDD);
+            return View(companyViewModelDD);
+
         }
 
         //
         // GET: /Company/Delete/5
         public ActionResult Delete(int id)
         {
-            return View();
+            var company = CompanyService.FindByID(id);
+            return View(company);
         }
 
         //
         // POST: /Company/Delete/5
         [HttpPost]
-        public ActionResult Delete(int id, FormCollection collection)
+        [ValidateAntiForgeryToken]
+        public ActionResult Delete(Company company)
         {
-            try
+            if (ModelState.IsValid)
             {
-                // TODO: Add delete logic here
-
+                CompanyService.Delete(company);
                 return RedirectToAction("Index");
             }
-            catch
-            {
-                return View();
-            }
+            return View(company);
         }
         #endregion
 
@@ -164,38 +220,38 @@ namespace FoodDeliverySystem.Controllers
         public ActionResult FindSimilarCompanies(List<SimilarProduct> SimilarProducts)
         {
             List<SimilarCompany> SimilarCompanies = CompanyService.PopulateSimilarCompanies(SimilarProducts).ToList();
-         
+
             return View(SimilarCompanies);
         }
 
         [HttpPost]
         public ActionResult PlaceOrder(List<OrderedProduct> OrderedProducts)
         {
-
-
-            var uid=User.Identity.GetUserId();
+            var uid = User.Identity.GetUserId();
             decimal vTotalCost = 0;
 
             foreach (var a in OrderedProducts)
             {
                 vTotalCost += a.Price * a.ProductQuantity;
             }
-
             Order order = new Order()
             {
-                ID = 1,
                 OrderDate = DateTime.Now,
                 state = 1,
                 UserID = uid,
                 CompanyID = OrderedProducts[0].CompanyID,
-                Products = OrderedProducts,
-                TotalCost=vTotalCost,
-                Company = CompanyService.FindByID(OrderedProducts[0].CompanyID)
+                TotalCost = vTotalCost,
             };
 
-            OrderService.Add(order);
+            var createdOrder = OrderService.Add(order);
 
-            return new HttpStatusCodeResult(HttpStatusCode.OK); 
+            foreach (var op in OrderedProducts)
+            {
+                op.OrderID = createdOrder.ID;
+                OrderedProductService.Add(op);
+            }
+
+            return new HttpStatusCodeResult(HttpStatusCode.OK);
         }
 
         public ActionResult Pay()
@@ -217,6 +273,15 @@ namespace FoodDeliverySystem.Controllers
                 return RedirectToAction("Index");
             }
             return View(card);
+        }
+
+        public ActionResult Report()
+        {
+            var uid = User.Identity.GetUserId();
+            CompanyService.GenerateAllReporst(uid);
+
+
+            return View("Index");
         }
         #endregion
 

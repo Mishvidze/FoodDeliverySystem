@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Web;
 using System.Web.Mvc;
+using System.Data.Entity;
 
 namespace FoodDeliverySystem.Services
 {
@@ -31,6 +32,25 @@ namespace FoodDeliverySystem.Services
             }
         }
 
+        static ProductPriceHistoryService _ProductPriceHistoryService;
+        public static ProductPriceHistoryService ProductPriceHistoryService
+        {
+            get
+            {
+                if (_ProductPriceHistoryService == null)
+                {
+
+                    _ProductPriceHistoryService = ProductPriceHistoryService.GetInstance();
+
+                }
+                return _ProductPriceHistoryService;
+            }
+            private set
+            {
+                _ProductPriceHistoryService = value;
+            }
+        }
+
         static ProductCategorySevice _productCategorySevice;
         public static ProductCategorySevice ProductCategorySevice
         {
@@ -50,9 +70,9 @@ namespace FoodDeliverySystem.Services
             }
         }
 
-        
 
-            
+
+
         static GeneralProductService _generalProductService;
         public static GeneralProductService GeneralProductService
         {
@@ -227,28 +247,66 @@ namespace FoodDeliverySystem.Services
         }
         #endregion
 
+        #region Custom CRUD
         public override IEnumerable<Product> GetAll()
         {
-            foreach (var product in container)
+            using (var ctx = new ApplicationDbContext())
             {
-                product.Company = CompanyService.FindByID(product.CompanyID);
+                return ctx.Products
+                    .Include(p => p.Company)
+                    .Include(p => p.GeneralProduct)
+                    .Include(p => p.ProductCategory)
+                    .ToList();
             }
-            return base.GetAll();
+
         }
 
+        public override Product Add(Product item)
+        {
+
+            base.Add(item);
+            ProductPriceHistoryService.Add(
+                    new ProductPriceHistory()
+                    {
+                        ProductID = item.ID,
+                        
+                        Price = item.Cost,
+                        StartDate = DateTime.Now
+                    }
+                );
+            return item;
+        }
+
+        public override Product Update(Product item)
+        {
+            base.Update(item);
+            ProductPriceHistoryService.Add(
+                    new ProductPriceHistory()
+                    {
+                        ProductID = item.ID,
+
+                        Price = item.Cost,
+                        StartDate = DateTime.Now
+                    }
+            );
+            return item;
+        }
+        #endregion
+
+        #region code for single element creation
         static ProductService instance;
         [MethodImpl(MethodImplOptions.Synchronized)]
         public static ProductService GetInstance()
         {
-            if(instance == null)
+            if (instance == null)
             {
-                instance =new ProductService();
+                instance = new ProductService();
             }
             return instance;
         }
+        #endregion
 
-
-        #region additional functions
+        #region Functions for dropdowns
         public void PopulateProduct(ProductViewModel productViewModel, Product product)
         {
             product.ID = productViewModel.ID;
@@ -260,13 +318,14 @@ namespace FoodDeliverySystem.Services
             product.Cost = productViewModel.Cost;
             product.CookingTime = productViewModel.CookingTime;
             //
-            product.Company = CompanyService.FindByID(product.CompanyID);
-            product.GeneralProduct = GeneralProductService.FindByID(product.GeneralProductID);
-            product.ProductCategory = ProductCategorySevice.FindByID(product.ProductCategoryID);
+            //product.Company = CompanyService.FindByID(product.CompanyID);
+            //product.GeneralProduct = GeneralProductService.FindByID(product.GeneralProductID);
+            //product.ProductCategory = ProductCategorySevice.FindByID(product.ProductCategoryID);
         }
 
         public void PopulateProductViewModel(ProductViewModel productViewModel, Product product)
         {
+            productViewModel.ID = product.ID;
             productViewModel.CompanyID = product.CompanyID;
             productViewModel.GeneralProductID = product.GeneralProductID;
             productViewModel.ProductCategoryID = product.ProductCategoryID;
@@ -303,17 +362,19 @@ namespace FoodDeliverySystem.Services
             productViwModel.ProductCategories = productCategorySelectList;
             productViwModel.GeneralProducts = generalProductSelectList;
         }
+        #endregion
 
+        #region Additional Functions
         public IEnumerable<Product> GetProductsByCompanyID(int id)
         {
             return container.Where(a => a.CompanyID == id);
         }
-        #endregion
 
 
         internal object GetRaitingsByCompanyID(int p)
         {
             throw new NotImplementedException();
         }
+        #endregion
     }
 }

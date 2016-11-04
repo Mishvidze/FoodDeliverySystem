@@ -52,30 +52,11 @@ namespace FoodDeliverySystem.Controllers
             if (ModelState.IsValid)
             {
                 order.state = 3;
+                OrderService.Update(order);
                 return RedirectToAction("Index");
             }
             return View(order);
         }
 
-        ////
-        //// GET: /CompanyType/Delete/5
-        //public ActionResult Delete(int id)
-        //{
-        //    return View(Service.FindByID(id));
-        //}
-
-        ////
-        //// POST: /CompanyType/Delete/5
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public ActionResult Delete(CompanyType item)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        Service.Delete(item);
-        //        return RedirectToAction("Index");
-        //    }
-        //    return View(item);
-        //}
 	}
 }
